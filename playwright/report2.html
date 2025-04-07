@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8"/>
+    <title>report2.html</title>
+    <link href="assets/style.css" rel="stylesheet" type="text/css"/></head>
+  <body onLoad="init()">
+    <script>/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+
+function toArray(iter) {
+    if (iter === null) {
+        return null;
+    }
+    return Array.prototype.slice.call(iter);
+}
+
+function find(selector, elem) { // eslint-disable-line no-redeclare
+    if (!elem) {
+        elem = document;
+    }
+    return elem.querySelector(selector);
+}
+
+function findAll(selector, elem) {
+    if (!elem) {
+        elem = document;
+    }
+    return toArray(elem.querySelectorAll(selector));
+}
+
+function sortColumn(elem) {
+    toggleSortStates(elem);
+    const colIndex = toArray(elem.parentNode.childNodes).indexOf(elem);
+    let key;
+    if (elem.classList.contains('result')) {
+        key = keyResult;
+    } else if (elem.classList.contains('links')) {
+        key = keyLink;
+    } else {
+        key = keyAlpha;
+    }
+    sortTable(elem, key(colIndex));
+}
+
+function showAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(showExtras);
+}
+
+function hideAllExtras() { // eslint-disable-line no-unused-vars
+    findAll('.col-result').forEach(hideExtras);
+}
+
+function showExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.remove('collapsed');
+    expandcollapse.classList.remove('expander');
+    expandcollapse.classList.add('collapser');
+}
+
+function hideExtras(colresultElem) {
+    const extras = colresultElem.parentNode.nextElementSibling;
+    const expandcollapse = colresultElem.firstElementChild;
+    extras.classList.add('collapsed');
+    expandcollapse.classList.remove('collapser');
+    expandcollapse.classList.add('expander');
+}
+
+function showFilters() {
+    let visibleString = getQueryParameter('visible') || 'all';
+    visibleString = visibleString.toLowerCase();
+    const checkedItems = visibleString.split(',');
+
+    const filterItems = document.getElementsByClassName('filter');
+    for (let i = 0; i < filterItems.length; i++) {
+        filterItems[i].hidden = false;
+
+        if (visibleString != 'all') {
+            filterItems[i].checked = checkedItems.includes(filterItems[i].getAttribute('data-test-result'));
+            filterTable(filterItems[i]);
+        }
+    }
+}
+
+function addCollapse() {
+    // Add links for show/hide all
+    const resulttable = find('table#results-table');
+    const showhideall = document.createElement('p');
+    showhideall.innerHTML = '<a href="javascript:showAllExtras()">Show all details</a> / ' +
+                            '<a href="javascript:hideAllExtras()">Hide all details</a>';
+    resulttable.parentElement.insertBefore(showhideall, resulttable);
+
+    // Add show/hide link to each result
+    findAll('.col-result').forEach(function(elem) {
+        const collapsed = getQueryParameter('collapsed') || 'Passed';
+        const extras = elem.parentNode.nextElementSibling;
+        const expandcollapse = document.createElement('span');
+        if (extras.classList.contains('collapsed')) {
+            expandcollapse.classList.add('expander');
+        } else if (collapsed.includes(elem.innerHTML)) {
+            extras.classList.add('collapsed');
+            expandcollapse.classList.add('expander');
+        } else {
+            expandcollapse.classList.add('collapser');
+        }
+        elem.appendChild(expandcollapse);
+
+        elem.addEventListener('click', function(event) {
+            if (event.currentTarget.parentNode.nextElementSibling.classList.contains('collapsed')) {
+                showExtras(event.currentTarget);
+            } else {
+                hideExtras(event.currentTarget);
+            }
+        });
+    });
+}
+
+function getQueryParameter(name) {
+    const match = RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+    return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+}
+
+function init () { // eslint-disable-line no-unused-vars
+    resetSortHeaders();
+
+    addCollapse();
+
+    showFilters();
+
+    sortColumn(find('.initial-sort'));
+
+    findAll('.sortable').forEach(function(elem) {
+        elem.addEventListener('click',
+            function() {
+                sortColumn(elem);
+            }, false);
+    });
+}
+
+function sortTable(clicked, keyFunc) {
+    const rows = findAll('.results-table-row');
+    const reversed = !clicked.classList.contains('asc');
+    const sortedRows = sort(rows, keyFunc, reversed);
+    /* Whole table is removed here because browsers acts much slower
+     * when appending existing elements.
+     */
+    const thead = document.getElementById('results-table-head');
+    document.getElementById('results-table').remove();
+    const parent = document.createElement('table');
+    parent.id = 'results-table';
+    parent.appendChild(thead);
+    sortedRows.forEach(function(elem) {
+        parent.appendChild(elem);
+    });
+    document.getElementsByTagName('BODY')[0].appendChild(parent);
+}
+
+function sort(items, keyFunc, reversed) {
+    const sortArray = items.map(function(item, i) {
+        return [keyFunc(item), i];
+    });
+
+    sortArray.sort(function(a, b) {
+        const keyA = a[0];
+        const keyB = b[0];
+
+        if (keyA == keyB) return 0;
+
+        if (reversed) {
+            return keyA < keyB ? 1 : -1;
+        } else {
+            return keyA > keyB ? 1 : -1;
+        }
+    });
+
+    return sortArray.map(function(item) {
+        const index = item[1];
+        return items[index];
+    });
+}
+
+function keyAlpha(colIndex) {
+    return function(elem) {
+        return elem.childNodes[1].childNodes[colIndex].firstChild.data.toLowerCase();
+    };
+}
+
+function keyLink(colIndex) {
+    return function(elem) {
+        const dataCell = elem.childNodes[1].childNodes[colIndex].firstChild;
+        return dataCell == null ? '' : dataCell.innerText.toLowerCase();
+    };
+}
+
+function keyResult(colIndex) {
+    return function(elem) {
+        const strings = ['Error', 'Failed', 'Rerun', 'XFailed', 'XPassed',
+            'Skipped', 'Passed'];
+        return strings.indexOf(elem.childNodes[1].childNodes[colIndex].firstChild.data);
+    };
+}
+
+function resetSortHeaders() {
+    findAll('.sort-icon').forEach(function(elem) {
+        elem.parentNode.removeChild(elem);
+    });
+    findAll('.sortable').forEach(function(elem) {
+        const icon = document.createElement('div');
+        icon.className = 'sort-icon';
+        icon.textContent = 'vvv';
+        elem.insertBefore(icon, elem.firstChild);
+        elem.classList.remove('desc', 'active');
+        elem.classList.add('asc', 'inactive');
+    });
+}
+
+function toggleSortStates(elem) {
+    //if active, toggle between asc and desc
+    if (elem.classList.contains('active')) {
+        elem.classList.toggle('asc');
+        elem.classList.toggle('desc');
+    }
+
+    //if inactive, reset all other functions and add ascending active
+    if (elem.classList.contains('inactive')) {
+        resetSortHeaders();
+        elem.classList.remove('inactive');
+        elem.classList.add('active');
+    }
+}
+
+function isAllRowsHidden(value) {
+    return value.hidden == false;
+}
+
+function filterTable(elem) { // eslint-disable-line no-unused-vars
+    const outcomeAtt = 'data-test-result';
+    const outcome = elem.getAttribute(outcomeAtt);
+    const classOutcome = outcome + ' results-table-row';
+    const outcomeRows = document.getElementsByClassName(classOutcome);
+
+    for(let i = 0; i < outcomeRows.length; i++){
+        outcomeRows[i].hidden = !elem.checked;
+    }
+
+    const rows = findAll('.results-table-row').filter(isAllRowsHidden);
+    const allRowsHidden = rows.length == 0 ? true : false;
+    const notFoundMessage = document.getElementById('not-found-message');
+    notFoundMessage.hidden = !allRowsHidden;
+}
+</script>
+    <h1>report2.html</h1>
+    <p>Report generated on 07-Apr-2025 at 10:46:46 by <a href="https://pypi.python.org/pypi/pytest-html">pytest-html</a> v3.2.0</p>
+    <h2>Summary</h2>
+    <p>14 tests ran in 308.06 seconds. </p>
+    <p class="filter" hidden="true">(Un)check the boxes to filter the results.</p><input checked="true" class="filter" data-test-result="passed" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="passed">11 passed</span>, <input checked="true" class="filter" data-test-result="skipped" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="skipped">0 skipped</span>, <input checked="true" class="filter" data-test-result="failed" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="failed">3 failed</span>, <input checked="true" class="filter" data-test-result="error" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="error">0 errors</span>, <input checked="true" class="filter" data-test-result="xfailed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xfailed">0 expected failures</span>, <input checked="true" class="filter" data-test-result="xpassed" disabled="true" hidden="true" name="filter_checkbox" onChange="filterTable(this)" type="checkbox"/><span class="xpassed">0 unexpected passes</span>
+    <h2>Results</h2>
+    <table id="results-table">
+      <thead id="results-table-head">
+        <tr>
+          <th class="sortable result initial-sort" col="result">Result</th>
+          <th class="sortable" col="name">Test</th>
+          <th class="sortable" col="duration">Duration</th>
+          <th class="sortable links" col="links">Links</th></tr>
+        <tr hidden="true" id="not-found-message">
+          <th colspan="4">No results found. Try to check the filters</th></tr></thead>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">test_moreValidations.py::test_UIChecks[chromium]</td>
+          <td class="col-duration">24.56</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/><br/>page = &lt;Page url=&#x27;https://rahulshettyacademy.com/seleniumPractise/#/offers&#x27;&gt;<br/><br/>    def test_UIChecks(page:Page):<br/>        page.goto(&quot;https://rahulshettyacademy.com/AutomationPractice/&quot;)<br/>        expect(page.get_by_placeholder(&quot;Hide/Show Example&quot;)).to_be_visible()<br/>        page.get_by_role(&quot;button&quot;,name=&quot;Hide&quot;).click()<br/>        expect(page.get_by_placeholder(&quot;Hide/Show Example&quot;)).to_be_hidden()<br/>        time.sleep(2)<br/>    <br/>        #Alert Handling<br/>        page.on(&quot;dialog&quot;, lambda dialog: dialog.accept())<br/>        page.get_by_role(&quot;button&quot;,name=&quot;Confirm&quot;)<br/>        time.sleep(2)<br/>    <br/>        #Mouse Hover<br/>        page.locator(&quot;#mousehover&quot;).hover()<br/>        page.get_by_role(&quot;link&quot;,name=&quot;Top&quot;).click()<br/>    <br/>    <br/>    # identify price column<br/>    # identify rice column<br/>    # extract the price<br/>        page.goto(&quot;https://rahulshettyacademy.com/seleniumPractise/#/offers&quot;)<br/>        page.locator(&quot;th&quot;)<br/>        for index in range(page.locator(&quot;th&quot;).count()):<br/>            if page.locator(&quot;th&quot;).nth(index).filter(has_text=&quot;Price&quot;).count() &gt; 0 :<br/>                colValue = index<br/>                print(f&quot;Price column value{colValue}&quot;)<br/>                break<br/>        riceRow = page.locator(&quot;tr&quot;).filter(has_text=&quot;Rice&quot;)<br/>&gt;       expect(riceRow.locator(&quot;td&quot;).nth(colValue)).to_contain_text(&quot;39&quot;)<br/><span class="error">E       AssertionError: Locator expected to contain text &#x27;39&#x27;</span><br/><span class="error">E       Actual value: 37 </span><br/><span class="error">E       Call log:</span><br/><span class="error">E       LocatorAssertions.to_contain_text with timeout 5000ms</span><br/><span class="error">E       waiting for locator(&quot;tr&quot;).filter(has_text=&quot;Rice&quot;).locator(&quot;td&quot;).nth(1)</span><br/><span class="error">E         locator resolved to &lt;td&gt;37&lt;/td&gt;</span><br/><span class="error">E         unexpected value &quot;37&quot;</span><br/><span class="error">E         locator resolved to &lt;td&gt;37&lt;/td&gt;</span><br/><span class="error">E         unexpected value &quot;37&quot;</span><br/><span class="error">E         locator resolved to &lt;td&gt;37&lt;/td&gt;</span><br/><span class="error">E         unexpected value &quot;37&quot;</span><br/><span class="error">E         locator resolved to &lt;td&gt;37&lt;/td&gt;</span><br/><span class="error">E         unexpected value &quot;37&quot;</span><br/><span class="error">E         locator resolved to &lt;td&gt;37&lt;/td&gt;</span><br/><span class="error">E         unexpected value &quot;37&quot;</span><br/><span class="error">E         locator resolved to &lt;td&gt;37&lt;/td&gt;</span><br/><span class="error">E         unexpected value &quot;37&quot;</span><br/><span class="error">E         locator resolved to &lt;td&gt;37&lt;/td&gt;</span><br/><span class="error">E         unexpected value &quot;37&quot;</span><br/><span class="error">E         locator resolved to &lt;td&gt;37&lt;/td&gt;</span><br/><span class="error">E         unexpected value &quot;37&quot;</span><br/><br/>test_moreValidations.py:35: AssertionError[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/> ------------------------------Captured stdout call------------------------------ <br/>Price column value1
+<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">test_playwrightBasics.py::test_wrongLogin[chromium]</td>
+          <td class="col-duration">9.71</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/><br/>page = &lt;Page url=&#x27;https://rahulshettyacademy.com/angularpractice/shop&#x27;&gt;<br/><br/>    def test_wrongLogin(page:Page):<br/>        page.goto(&quot;https://rahulshettyacademy.com/loginpagePractise&quot;)<br/>        page.get_by_label(&quot;Username:&quot;).fill(&quot;rahulshettyacademy&quot;)<br/>        page.get_by_label(&quot;Password:&quot;).fill(&quot;learning&quot;)<br/>        page.get_by_role(&quot;combobox&quot;).select_option(&quot;teach&quot;)<br/>        page.locator(&quot;#terms&quot;).check()<br/>        page.get_by_role(&quot;link&quot;,name=&quot;terms and conditions&quot;)<br/>        page.get_by_role(&quot;button&quot;,name=&quot;Sign In&quot;).click()<br/>&gt;       expect(page.get_by_text(&quot;Incorrect username/password.&quot;)).to_be_visible()<br/><span class="error">E       AssertionError: Locator expected to be visible</span><br/><span class="error">E       Actual value: False </span><br/><span class="error">E       Call log:</span><br/><span class="error">E       LocatorAssertions.to_be_visible with timeout 5000ms</span><br/><span class="error">E       waiting for get_by_text(&quot;Incorrect username/password.&quot;)</span><br/><span class="error">E         locator resolved to &lt;div class=&quot;alert alert-danger col-md-12&quot;&gt;…&lt;/div&gt;</span><br/><span class="error">E         unexpected value &quot;hidden&quot;</span><br/><span class="error">E         locator resolved to &lt;div class=&quot;alert alert-danger col-md-12&quot;&gt;…&lt;/div&gt;</span><br/><span class="error">E         unexpected value &quot;hidden&quot;</span><br/><span class="error">E         locator resolved to &lt;div class=&quot;alert alert-danger col-md-12&quot;&gt;…&lt;/div&gt;</span><br/><span class="error">E         unexpected value &quot;hidden&quot;</span><br/><span class="error">E         locator resolved to &lt;div class=&quot;alert alert-danger col-md-12&quot;&gt;…&lt;/div&gt;</span><br/><span class="error">E         unexpected value &quot;hidden&quot;</span><br/><span class="error">E         locator resolved to &lt;div class=&quot;alert alert-danger col-md-12&quot;&gt;…&lt;/div&gt;</span><br/><span class="error">E         unexpected value &quot;hidden&quot;</span><br/><br/>test_playwrightBasics.py:33: AssertionError[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/></div></td></tr></tbody>
+      <tbody class="failed results-table-row">
+        <tr>
+          <td class="col-result">Failed</td>
+          <td class="col-name">test_playwrightBasics.py::test_firefoxBrowser</td>
+          <td class="col-duration">255.45</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/><br/>playwright = &lt;playwright._impl._playwright.Playwright object at 0x0455E950&gt;<br/><br/>    def test_firefoxBrowser(playwright):<br/>        firefoxBrowser = playwright.firefox<br/>        browser = firefoxBrowser.launch(headless=False)<br/>        page = browser.new_page()<br/>        page.goto(&quot;https://rahulshettyacademy.com/loginpagePractise&quot;)<br/>        page.get_by_label(&quot;Username:&quot;).fill(&quot;rahulshettyacademy&quot;)<br/>        page.get_by_label(&quot;Password:&quot;).fill(&quot;learning&quot;)<br/>        page.get_by_role(&quot;combobox&quot;).select_option(&quot;teach&quot;)<br/>        page.locator(&quot;#terms&quot;).check()<br/>        page.get_by_role(&quot;link&quot;, name=&quot;terms and conditions&quot;)<br/>&gt;       page.get_by_role(&quot;button&quot;, name=&quot;Sign In&quot;).click()<br/><br/>test_playwrightBasics.py:46: <br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/>..\venv\lib\site-packages\playwright\sync_api\_generated.py:15698: in click<br/>    trial=trial,<br/>..\venv\lib\site-packages\playwright\_impl\_locator.py:160: in click<br/>    return await self._frame.click(self._selector, strict=True, **params)<br/>..\venv\lib\site-packages\playwright\_impl\_frame.py:489: in click<br/>    await self._channel.send(&quot;click&quot;, locals_to_params(locals()))<br/>..\venv\lib\site-packages\playwright\_impl\_connection.py:62: in send<br/>    lambda: self.inner_send(method, params, False)<br/>..\venv\lib\site-packages\playwright\_impl\_connection.py:482: in wrap_api_call<br/>    return await cb()<br/>_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ <br/><br/>self = &lt;playwright._impl._connection.Channel object at 0x053EA330&gt;, method = &#x27;click&#x27;<br/>params = {&#x27;selector&#x27;: &#x27;internal:role=button[name=&quot;Sign In&quot;i]&#x27;, &#x27;strict&#x27;: True}, return_as_dict = False<br/><br/>    async def inner_send(<br/>        self, method: str, params: Optional[Dict], return_as_dict: bool<br/>    ) -&gt; Any:<br/>        if params is None:<br/>            params = {}<br/>        callback = self._connection._send_message_to_server(self._guid, method, params)<br/>        if self._connection._error:<br/>            error = self._connection._error<br/>            self._connection._error = None<br/>            raise error<br/>        done, _ = await asyncio.wait(<br/>            {<br/>                self._connection._transport.on_error_future,<br/>                callback.future,<br/>            },<br/>            return_when=asyncio.FIRST_COMPLETED,<br/>        )<br/>        if not callback.future.done():<br/>            callback.future.cancel()<br/>&gt;       result = next(iter(done)).result()<br/><span class="error">E       playwright._impl._api_types.TimeoutError: Timeout 30000ms exceeded.</span><br/><span class="error">E       =========================== logs ===========================</span><br/><span class="error">E       waiting for get_by_role(&quot;button&quot;, name=&quot;Sign In&quot;)</span><br/><span class="error">E         locator resolved to &lt;input type=&quot;submit&quot; name=&quot;signin&quot; id=&quot;signInBtn&quot; value…/&gt;</span><br/><span class="error">E       attempting click action</span><br/><span class="error">E         waiting for element to be visible, enabled and stable</span><br/><span class="error">E         element is visible, enabled and stable</span><br/><span class="error">E         scrolling into view if needed</span><br/><span class="error">E         done scrolling</span><br/><span class="error">E         performing click action</span><br/><span class="error">E       ============================================================</span><br/><br/>..\venv\lib\site-packages\playwright\_impl\_connection.py:97: TimeoutError[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_UIValidations1.py::test_UIValidationsDynamicScript[chromium]</td>
+          <td class="col-duration">18.33</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_Network1.py::test_Network[chromium]</td>
+          <td class="col-duration">23.86</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/> ------------------------------Captured stdout call------------------------------ <br/> In intercept_response function 
+##########order_text
+ You have No Orders to show at this time. Please Visit Back Us 
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_UIValidations1.py::test_childWindowHandles[chromium]</td>
+          <td class="col-duration">5.78</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/> ------------------------------Captured stdout call------------------------------ <br/>Please email us at mentor@rahulshettyacademy.com with below template to receive response 
+Email
+mentor@rahulshettyacademy.com
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_Network2.py::test_Network2[chromium]</td>
+          <td class="col-duration">17.21</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw0] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/> ------------------------------Captured stdout call------------------------------ <br/> In intercept_response function 
+You are not authorize to view this order
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_playwrightBasics.py::test_coreLocators[chromium]</td>
+          <td class="col-duration">8.87</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_playwrightBasics.py::test_playwrightShortCut[chromium]</td>
+          <td class="col-duration">6.79</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_Network2.py::test_sessionStorage</td>
+          <td class="col-duration">15.37</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/> ------------------------------Captured stdout call------------------------------ <br/>{&#x27;token&#x27;: &#x27;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2Mjc0MjU0OWUyNmI3ZTFhMTBlOWZjZTAiLCJ1c2VyRW1haWwiOiJyYWh1bHNoZXR0eUBnbWFpbC5jb20iLCJ1c2VyTW9iaWxlIjo5NTQzNjQ1NzU0LCJ1c2VyUm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzQ0MDAyNzMzLCJleHAiOjE3NzU1NjAzMzN9.3Td8AGCWiRIEb10s1ml3_t2oYeslLiXY_0dqrmLs8lY&#x27;, &#x27;userId&#x27;: &#x27;62742549e26b7e1a10e9fce0&#x27;, &#x27;message&#x27;: &#x27;Login Successfully&#x27;}
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_framework_web_api.py::test_e2e_web_api[user_creds0]</td>
+          <td class="col-duration">29.08</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/> ------------------------------Captured stdout call------------------------------ <br/>{&#x27;token&#x27;: &#x27;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2Mjc0MjU0OWUyNmI3ZTFhMTBlOWZjZTAiLCJ1c2VyRW1haWwiOiJyYWh1bHNoZXR0eUBnbWFpbC5jb20iLCJ1c2VyTW9iaWxlIjo5NTQzNjQ1NzU0LCJ1c2VyUm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzQ0MDAyNzM5LCJleHAiOjE3NzU1NjAzMzl9.4975xTEchWnYmhEjYb6Y0n4sgZGdXrlEXikNYgTpBwE&#x27;, &#x27;userId&#x27;: &#x27;62742549e26b7e1a10e9fce0&#x27;, &#x27;message&#x27;: &#x27;Login Successfully&#x27;}
+{&#x27;orders&#x27;: [&#x27;67f35eb4fc76541aad22a08a&#x27;], &#x27;productOrderId&#x27;: [&#x27;67a8df1ac0d3e6622a297ccb&#x27;], &#x27;message&#x27;: &#x27;Order Placed Successfully&#x27;}
+############Navigated to Login Page##########
+###########LoginCompleted#######
+############post sleep 5 seconds##########
+#######Clicked on View Button##########
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_playwrightBasics.py::test_playwrightBasics</td>
+          <td class="col-duration">12.82</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_web_api.py::test_e2e_web_api</td>
+          <td class="col-duration">29.82</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw1] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/> ------------------------------Captured stdout call------------------------------ <br/>{&#x27;token&#x27;: &#x27;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2Mjc0MjU0OWUyNmI3ZTFhMTBlOWZjZTAiLCJ1c2VyRW1haWwiOiJyYWh1bHNoZXR0eUBnbWFpbC5jb20iLCJ1c2VyTW9iaWxlIjo5NTQzNjQ1NzU0LCJ1c2VyUm9sZSI6ImN1c3RvbWVyIiwiaWF0IjoxNzQ0MDAyNzc3LCJleHAiOjE3NzU1NjAzNzd9.krKTTsJZ0I1frLozpT6WpPUinczF49YoS4RJpCXoXSs&#x27;, &#x27;userId&#x27;: &#x27;62742549e26b7e1a10e9fce0&#x27;, &#x27;message&#x27;: &#x27;Login Successfully&#x27;}
+{&#x27;orders&#x27;: [&#x27;67f35ed9fc76541aad22a0dc&#x27;], &#x27;productOrderId&#x27;: [&#x27;67a8df1ac0d3e6622a297ccb&#x27;], &#x27;message&#x27;: &#x27;Order Placed Successfully&#x27;}
+<br/></div></td></tr></tbody>
+      <tbody class="passed results-table-row">
+        <tr>
+          <td class="col-result">Passed</td>
+          <td class="col-name">test_framework_web_api.py::test_e2e_web_api[user_creds1]</td>
+          <td class="col-duration">30.68</td>
+          <td class="col-links"></td></tr>
+        <tr>
+          <td class="extra" colspan="4">
+            <div class="log">[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/>[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe[gw2] win32 -- Python 3.7.0 C:\Users\bgh51043\PycharmProjects\PytestPython\venv\Scripts\python.exe<br/> ------------------------------Captured stdout call------------------------------ <br/>{&#x27;token&#x27;: &#x27;eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MjBjN2JmMTQ4NzY3ZjFmMTIxNWQyY2EiLCJ1c2VyRW1haWwiOiJhbnNoaWthQGdtYWlsLmNvbSIsInVzZXJNb2JpbGUiOjk4NzY1NDMyMTAsImlhdCI6MTc0NDAwMjc3NCwiZXhwIjoxNzc1NTYwMzc0fQ.zd0JxOn1d_g5mQKeIBFgJTy-umJDPZN2waZYuVl5Kjs&#x27;, &#x27;userId&#x27;: &#x27;620c7bf148767f1f1215d2ca&#x27;, &#x27;message&#x27;: &#x27;Login Successfully&#x27;}
+{&#x27;orders&#x27;: [&#x27;67f35ed7fc76541aad22a0d3&#x27;], &#x27;productOrderId&#x27;: [&#x27;67a8df1ac0d3e6622a297ccb&#x27;], &#x27;message&#x27;: &#x27;Order Placed Successfully&#x27;}
+############Navigated to Login Page##########
+###########LoginCompleted#######
+############post sleep 5 seconds##########
+#######Clicked on View Button##########
+<br/></div></td></tr></tbody></table></body></html>
