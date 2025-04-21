@@ -4,7 +4,7 @@
 ###
 ####
 #####
-print("############1.1 patterns############")
+c
 n=5
 for i in range(1,n+1):
     print("*" * i,end=" ")
