@@ -1,60 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot generator="Robot 6.1.1 (Python 3.7.0 on win32)" generated="20250506 11:12:40.961" rpa="false" schemaversion="4">
-<suite id="s1" name="testDemo1" source="C:\Users\bgh51043\PycharmProjects\PytestPython\playwright\RobotFramework\tests\testDemo1.robot">
-<test id="s1-t1" name="Validate Unsuccessful Login" line="6">
-<kw name="Open the browser with Mortgage Payment URL">
-<kw name="Create Webdriver" library="SeleniumLibrary">
-<arg>Chrome</arg>
-<doc>Creates an instance of Selenium WebDriver.</doc>
-<msg timestamp="20250506 11:12:41.260" level="INFO">Creating an instance of the Chrome WebDriver.</msg>
-<status status="PASS" starttime="20250506 11:12:41.260" endtime="20250506 11:12:44.395"/>
+<robot generator="Robot 6.1.1 (Python 3.7.0 on win32)" generated="20250507 21:30:14.212" rpa="false" schemaversion="4">
+<suite id="s1" name="testDemo5" source="C:\Users\bgh51043\PycharmProjects\PytestPython\playwright\RobotFramework\tests\testDemo5.robot">
+<test id="s1-t1" name="Invalid username" line="13">
+<kw name="Validate UnSuccesful Login">
+<arg>${username}</arg>
+<arg>${password}</arg>
+<msg timestamp="20250507 21:30:14.577" level="FAIL">Variable '${username}' not found.</msg>
+<status status="FAIL" starttime="20250507 21:30:14.575" endtime="20250507 21:30:14.577"/>
 </kw>
-<kw name="Go To" library="SeleniumLibrary">
-<arg>https://rahulshettyacademy.com/loginpagePractise/</arg>
-<doc>Navigates the current browser window to the provided ``url``.</doc>
-<msg timestamp="20250506 11:12:44.395" level="INFO">Opening url 'https://rahulshettyacademy.com/loginpagePractise/'</msg>
-<status status="PASS" starttime="20250506 11:12:44.395" endtime="20250506 11:12:45.501"/>
+<kw name="Close Browser" library="SeleniumLibrary" type="TEARDOWN">
+<doc>Closes the current browser.</doc>
+<status status="PASS" starttime="20250507 21:30:14.578" endtime="20250507 21:30:14.579"/>
 </kw>
-<status status="PASS" starttime="20250506 11:12:41.260" endtime="20250506 11:12:45.501"/>
+<status status="FAIL" starttime="20250507 21:30:14.571" endtime="20250507 21:30:14.580">Variable '${username}' not found.</status>
+</test>
+<test id="s1-t2" name="Invalid password" line="13">
+<kw name="Validate UnSuccesful Login">
+<arg>${username}</arg>
+<arg>${password}</arg>
+<msg timestamp="20250507 21:30:14.588" level="FAIL">Variable '${username}' not found.</msg>
+<status status="FAIL" starttime="20250507 21:30:14.586" endtime="20250507 21:30:14.588"/>
 </kw>
-<kw name="Fill the login form">
-<kw name="Input Text" library="SeleniumLibrary">
-<arg>id:username</arg>
-<arg>rahulshettyacademy</arg>
-<doc>Types the given ``text`` into the text field identified by ``locator``.</doc>
-<msg timestamp="20250506 11:12:45.510" level="INFO">Typing text 'rahulshettyacademy' into text field 'id:username'.</msg>
-<status status="PASS" starttime="20250506 11:12:45.508" endtime="20250506 11:12:45.891"/>
+<kw name="Close Browser" library="SeleniumLibrary" type="TEARDOWN">
+<doc>Closes the current browser.</doc>
+<status status="PASS" starttime="20250507 21:30:14.589" endtime="20250507 21:30:14.589"/>
 </kw>
-<kw name="Input Password" library="SeleniumLibrary">
-<arg>id:password</arg>
-<arg>12232323</arg>
-<doc>Types the given password into the text field identified by ``locator``.</doc>
-<msg timestamp="20250506 11:12:45.893" level="INFO">Typing password into text field 'id:password'.</msg>
-<msg timestamp="20250506 11:12:45.974" level="INFO">Temporally setting log level to: NONE</msg>
-<msg timestamp="20250506 11:12:46.100" level="INFO">Log level changed from NONE to INFO.</msg>
-<status status="PASS" starttime="20250506 11:12:45.891" endtime="20250506 11:12:46.100"/>
+<status status="FAIL" starttime="20250507 21:30:14.583" endtime="20250507 21:30:14.590">Variable '${username}' not found.</status>
+</test>
+<test id="s1-t3" name="special characters" line="13">
+<kw name="Validate UnSuccesful Login">
+<arg>${username}</arg>
+<arg>${password}</arg>
+<msg timestamp="20250507 21:30:14.603" level="FAIL">Variable '${username}' not found.</msg>
+<status status="FAIL" starttime="20250507 21:30:14.601" endtime="20250507 21:30:14.603"/>
 </kw>
-<kw name="Click Button" library="SeleniumLibrary">
-<arg>signInBtn</arg>
-<doc>Clicks the button identified by ``locator``.</doc>
-<msg timestamp="20250506 11:12:46.103" level="INFO">Clicking button 'signInBtn'.</msg>
-<status status="PASS" starttime="20250506 11:12:46.101" endtime="20250506 11:12:46.295"/>
+<kw name="Close Browser" library="SeleniumLibrary" type="TEARDOWN">
+<doc>Closes the current browser.</doc>
+<status status="PASS" starttime="20250507 21:30:14.605" endtime="20250507 21:30:14.605"/>
 </kw>
-<status status="PASS" starttime="20250506 11:12:45.507" endtime="20250506 11:12:46.295"/>
-</kw>
-<status status="PASS" starttime="20250506 11:12:41.259" endtime="20250506 11:12:46.296"/>
+<status status="FAIL" starttime="20250507 21:30:14.598" endtime="20250507 21:30:14.606">Variable '${username}' not found.</status>
 </test>
 <doc>To validate the Login form</doc>
-<status status="PASS" starttime="20250506 11:12:40.963" endtime="20250506 11:12:46.298"/>
+<status status="FAIL" starttime="20250507 21:30:14.215" endtime="20250507 21:30:14.609"/>
 </suite>
 <statistics>
 <total>
-<stat pass="1" fail="0" skip="0">All Tests</stat>
+<stat pass="0" fail="3" skip="0">All Tests</stat>
 </total>
 <tag>
 </tag>
 <suite>
-<stat pass="1" fail="0" skip="0" id="s1" name="testDemo1">testDemo1</stat>
+<stat pass="0" fail="3" skip="0" id="s1" name="testDemo5">testDemo5</stat>
 </suite>
 </statistics>
 <errors>
