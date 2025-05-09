@@ -1,56 +1,41 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<robot generator="Robot 6.1.1 (Python 3.7.0 on win32)" generated="20250507 21:30:14.212" rpa="false" schemaversion="4">
-<suite id="s1" name="testDemo5" source="C:\Users\bgh51043\PycharmProjects\PytestPython\playwright\RobotFramework\tests\testDemo5.robot">
-<test id="s1-t1" name="Invalid username" line="13">
-<kw name="Validate UnSuccesful Login">
-<arg>${username}</arg>
-<arg>${password}</arg>
-<msg timestamp="20250507 21:30:14.577" level="FAIL">Variable '${username}' not found.</msg>
-<status status="FAIL" starttime="20250507 21:30:14.575" endtime="20250507 21:30:14.577"/>
+<robot generator="Robot 6.1.1 (Python 3.7.0 on win32)" generated="20250508 17:49:59.241" rpa="false" schemaversion="4">
+<suite id="s1" name="testDemo9" source="C:\Users\bgh51043\PycharmProjects\PytestPython\playwright\RobotFramework\tests\testDemo9.robot">
+<test id="s1-t1" name="Validate Unsuccessful Login" line="7">
+<kw name="Open the browser with Mortgage Payment URL">
+<kw name="Create Webdriver" library="SeleniumLibrary">
+<arg>Edge</arg>
+<doc>Creates an instance of Selenium WebDriver.</doc>
+<msg timestamp="20250508 17:49:59.589" level="INFO">Creating an instance of the Edge WebDriver.</msg>
+<status status="PASS" starttime="20250508 17:49:59.589" endtime="20250508 17:50:04.303"/>
 </kw>
-<kw name="Close Browser" library="SeleniumLibrary" type="TEARDOWN">
-<doc>Closes the current browser.</doc>
-<status status="PASS" starttime="20250507 21:30:14.578" endtime="20250507 21:30:14.579"/>
+<kw name="Go To" library="SeleniumLibrary">
+<arg>https://rahulshettyacademy.com/loginpagePractise/</arg>
+<doc>Navigates the current browser window to the provided ``url``.</doc>
+<msg timestamp="20250508 17:50:04.304" level="INFO">Opening url 'https://rahulshettyacademy.com/loginpagePractise/'</msg>
+<status status="PASS" starttime="20250508 17:50:04.303" endtime="20250508 17:50:05.814"/>
 </kw>
-<status status="FAIL" starttime="20250507 21:30:14.571" endtime="20250507 21:30:14.580">Variable '${username}' not found.</status>
-</test>
-<test id="s1-t2" name="Invalid password" line="13">
-<kw name="Validate UnSuccesful Login">
-<arg>${username}</arg>
-<arg>${password}</arg>
-<msg timestamp="20250507 21:30:14.588" level="FAIL">Variable '${username}' not found.</msg>
-<status status="FAIL" starttime="20250507 21:30:14.586" endtime="20250507 21:30:14.588"/>
+<kw name="Sleep" library="BuiltIn">
+<arg>3</arg>
+<doc>Pauses the test executed for the given time.</doc>
+<msg timestamp="20250508 17:50:08.817" level="INFO">Slept 3 seconds</msg>
+<status status="PASS" starttime="20250508 17:50:05.814" endtime="20250508 17:50:08.817"/>
 </kw>
-<kw name="Close Browser" library="SeleniumLibrary" type="TEARDOWN">
-<doc>Closes the current browser.</doc>
-<status status="PASS" starttime="20250507 21:30:14.589" endtime="20250507 21:30:14.589"/>
+<status status="PASS" starttime="20250508 17:49:59.588" endtime="20250508 17:50:08.818"/>
 </kw>
-<status status="FAIL" starttime="20250507 21:30:14.583" endtime="20250507 21:30:14.590">Variable '${username}' not found.</status>
-</test>
-<test id="s1-t3" name="special characters" line="13">
-<kw name="Validate UnSuccesful Login">
-<arg>${username}</arg>
-<arg>${password}</arg>
-<msg timestamp="20250507 21:30:14.603" level="FAIL">Variable '${username}' not found.</msg>
-<status status="FAIL" starttime="20250507 21:30:14.601" endtime="20250507 21:30:14.603"/>
-</kw>
-<kw name="Close Browser" library="SeleniumLibrary" type="TEARDOWN">
-<doc>Closes the current browser.</doc>
-<status status="PASS" starttime="20250507 21:30:14.605" endtime="20250507 21:30:14.605"/>
-</kw>
-<status status="FAIL" starttime="20250507 21:30:14.598" endtime="20250507 21:30:14.606">Variable '${username}' not found.</status>
+<status status="PASS" starttime="20250508 17:49:59.587" endtime="20250508 17:50:08.819"/>
 </test>
 <doc>To validate the Login form</doc>
-<status status="FAIL" starttime="20250507 21:30:14.215" endtime="20250507 21:30:14.609"/>
+<status status="PASS" starttime="20250508 17:49:59.247" endtime="20250508 17:50:08.823"/>
 </suite>
 <statistics>
 <total>
-<stat pass="0" fail="3" skip="0">All Tests</stat>
+<stat pass="1" fail="0" skip="0">All Tests</stat>
 </total>
 <tag>
 </tag>
 <suite>
-<stat pass="0" fail="3" skip="0" id="s1" name="testDemo5">testDemo5</stat>
+<stat pass="1" fail="0" skip="0" id="s1" name="testDemo9">testDemo9</stat>
 </suite>
 </statistics>
 <errors>
